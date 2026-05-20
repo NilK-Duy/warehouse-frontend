@@ -124,7 +124,7 @@ const CreateReceiptPage: React.FC = () => {
   };
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} />
