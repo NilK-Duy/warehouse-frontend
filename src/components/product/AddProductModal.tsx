@@ -47,13 +47,14 @@ const AddProductModal = ({ open, onClose, onSubmit }: Props) => {
         style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}
       >
         <div>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Mã sản phẩm *</label>
+          <label htmlFor='product-code' style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Mã sản phẩm *</label>
           <Controller
             name="code"
             control={control}
             render={({ field }) => (
               <Input 
                 {...field}
+                id='product-code'
                 placeholder="Mã sản phẩm là duy nhất" 
                 size="large"
                 status={errors.code ? 'error' : ''}
@@ -68,13 +69,14 @@ const AddProductModal = ({ open, onClose, onSubmit }: Props) => {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Tên sản phẩm</label>
+          <label htmlFor='product-name' style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Tên sản phẩm</label>
           <Controller
             name="name"
             control={control}
             render={({ field }) => (
               <Input 
                 {...field}
+                id='product-name'
                 placeholder="" 
                 size="large"
               />
@@ -83,13 +85,14 @@ const AddProductModal = ({ open, onClose, onSubmit }: Props) => {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Đơn vị</label>
+          <label htmlFor='product-unit' style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Đơn vị</label>
           <Controller
             name="unit"
             control={control}
             render={({ field }) => (
               <Input 
                 {...field}
+                id='product-unit'
                 placeholder="e.g. Cái, Hộp, Kg,..." 
                 size="large"
               />

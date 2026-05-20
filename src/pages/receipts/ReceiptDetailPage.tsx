@@ -83,14 +83,17 @@ const ReceiptDetailPage: React.FC = () => {
 
   if (loading || !receipt) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
-        <Spin size="large" tip="Đang tải dữ liệu chi tiết phiếu nhập..." />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px', gap: '12px' }}>
+        <Spin size="large" />
+        <div style={{ color: '#1677ff', fontSize: '14px', fontWeight: 500 }}>
+          Đang tải dữ liệu chi tiết phiếu nhập...
+        </div>
       </div>
     );
   }
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} />

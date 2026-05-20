@@ -11,6 +11,18 @@ interface Props {
 }
 
 const ProductSearch = ({ products, onSelect, onCreateNew }: Props) => {
+
+  const selectOptions = products.map((product) => ({
+    value: product.id,
+    productData: product,
+    label: (
+      <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 0' }}>
+        <span style={{ fontWeight: 500, color: '#262626', fontSize: '14px' }}>{product.name}</span>
+        <Text type="secondary" style={{ fontSize: '12px' }}>{product.code}</Text>
+      </div>
+    ),
+  }));
+
   return (
     <Select
       showSearch
@@ -23,21 +35,21 @@ const ProductSearch = ({ products, onSelect, onCreateNew }: Props) => {
       }
       size="large"
       value={null}
-      optionFilterProp="children"
-      filterOption={(input, option) => {
-        const product = option?.data;
-        if (!product) return false;
-        const searchKey = input.toLowerCase();
+      options={selectOptions}
+      optionRender={(option) => {
+        const product = option.data.productData;
         return (
-          product.name.toLowerCase().includes(searchKey) ||
-          product.code.toLowerCase().includes(searchKey)
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 0' }}>
+            <span style={{ fontWeight: 500, color: '#262626', fontSize: '14px' }}>{product.name}</span>
+            <Text type="secondary" style={{ fontSize: '12px' }}>{product.code}</Text>
+          </div>
         );
       }}
       onChange={(value) => {
         const found = products.find((p) => p.id === value);
         if (found) onSelect(found);
       }}
-      dropdownRender={(menu) => (
+      popupRender={(menu) => (
         <>
           <div style={{ padding: '4px 4px 0px 4px' }}>
             <Button
@@ -54,16 +66,7 @@ const ProductSearch = ({ products, onSelect, onCreateNew }: Props) => {
           {menu}
         </>
       )}
-    >
-      {products.map((product) => (
-        <Select.Option key={product.id} value={product.id} data={product}>
-          <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 0' }}>
-            <span style={{ fontWeight: 500, color: '#262626', fontSize: '14px' }}>{product.name}</span>
-            <Text type="secondary" style={{ fontSize: '12px' }}>{product.code}</Text>
-          </div>
-        </Select.Option>
-      ))}
-    </Select>
+    />
   );
 };
 

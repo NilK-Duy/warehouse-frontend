@@ -145,7 +145,7 @@ const ReceiptListPage: React.FC = () => {
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ cursor: 'pointer' }}>
           <Title level={3} style={{ margin: 0 }}>Phiếu nhập hàng</Title>
@@ -185,24 +185,27 @@ const ReceiptListPage: React.FC = () => {
         centered
       >
         {detailLoading && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
-            <Spin tip="Đang tải dữ liệu chi tiết..." />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0', gap: '12px' }}>
+            <Spin size="large" />
+            <div style={{ color: '#1677ff', fontSize: '14px' }}>Đang tải dữ liệu chi tiết...</div>
           </div>
         )}
 
         {!detailLoading && selectedReceipt && (
-          <Space direction="vertical" size="middle" style={{ width: '100%', marginTop: 16 }}>
+          <Space orientation="vertical" size="middle" style={{ width: '100%', marginTop: 16 }}>
             <Descriptions 
               bordered 
               column={2}
               size="small"
-              labelStyle={{ 
-                fontWeight: 'bold', 
-                color: '#262626', 
-                background: '#eceeed',
-              }}
-              contentStyle={{
-                background: '#ffffff'
+              styles={{
+                label: {
+                  fontWeight: 'bold', 
+                  color: '#262626', 
+                  background: '#eceeed'
+                },
+                content: {
+                  background: '#ffffff'
+                }
               }}
             >
               <Descriptions.Item label="Mã phiếu">{selectedReceipt.receiptNo}</Descriptions.Item>
