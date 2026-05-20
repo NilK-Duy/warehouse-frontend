@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Form, Input, InputNumber, Button, Card, Typography, Space, Row, Col, message } from 'antd';
+import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 import { getProducts, createProduct } from '../../api/product.api';
 import { createReceipt } from '../../api/receipt.api';
@@ -11,56 +13,43 @@ import ProductSearch from '../../components/product/ProductSearch';
 import AddProductModal from '../../components/product/AddProductModal';
 import ReceiptItemsTable from '../../components/receipt/ReceiptItemsTable';
 
-import {
-  calculateAmount,
-  calculateGrandTotal,
-} from '../../utils/calculation';
-
+import { calculateAmount, calculateGrandTotal } from '../../utils/calculation';
 import { formatCurrency } from '../../utils/currency';
 
-const CreateReceiptPage = () => {
+const { Title, Text } = Typography;
+
+const CreateReceiptPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [items, setItems] = useState<ReceiptItemForm[]>([]);
-  const [openModal, setOpenModal] = useState(false);
-
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: {
-      receiptNo: '',
-      department: '',
-      unitName: '',
-      deliveryPerson: '',
-      importReason: '',
-      warehouseName: '',
-      location: '',
-      documentCount: 1,
-    },
-  });
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
-    const data = await getProducts();
-    setProducts(data);
+    try {
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error) {
+      message.error('Failed to fetch products');
+    }
   };
 
   const handleSelectProduct = (product: Product) => {
-    const existedIndex = items.findIndex(
-      (item) => item.productId === product.id,
-    );
+    const existedIndex = items.findIndex((item) => item.productId === product.id);
 
     if (existedIndex !== -1) {
       const cloned = [...items];
-
-      cloned[existedIndex].quantity += 1;
-
-      cloned[existedIndex].amount =
-        calculateAmount(
-          cloned[existedIndex].quantity,
-          cloned[existedIndex].unitPrice,
-        );
-
+      cloned[existedIndex].actualQuantity += 1;
+      cloned[existedIndex].amount = calculateAmount(
+        cloned[existedIndex].actualQuantity,
+        cloned[existedIndex].unitPrice
+      );
       setItems(cloned);
       return;
     }
@@ -78,23 +67,13 @@ const CreateReceiptPage = () => {
     ]);
   };
 
-  const handleChangeItem = (
-    index: number,
-    field: keyof ReceiptItemForm,
-    value: number,
-  ) => {
+  const handleChangeItem = (index: number, field: keyof ReceiptItemForm, value: number) => {
     const cloned = [...items];
-
     cloned[index] = {
       ...cloned[index],
       [field]: value,
     };
-
-    cloned[index].amount = calculateAmount(
-      cloned[index].quantity,
-      cloned[index].unitPrice,
-    );
-
+    cloned[index].amount = calculateAmount(cloned[index].actualQuantity, cloned[index].unitPrice);
     setItems(cloned);
   };
 
@@ -102,153 +81,145 @@ const CreateReceiptPage = () => {
     return calculateGrandTotal(items);
   }, [items]);
 
-  const handleCreateProduct = async (
-    data: any,
-  ) => {
-    const created = await createProduct(data);
-
-    setProducts((prev) => [created, ...prev]);
-
-    handleSelectProduct(created);
-
-    setOpenModal(false);
+  const handleCreateProduct = async (data: any) => {
+    try {
+      const created = await createProduct(data);
+      setProducts((prev) => [created, ...prev]);
+      handleSelectProduct(created);
+      setOpenModal(false);
+      message.success('Product created and added successfully');
+    } catch (error) {
+      message.error('Failed to create product');
+    }
   };
 
   const onSubmit = async (values: any) => {
     if (items.length === 0) {
-      alert('Please add products');
+      message.warning('Please add at least one product to the receipt');
       return;
     }
 
-    const payload = {
-      ...values,
-      items: items.map((item) => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        actualQuantity: item.actualQuantity,
-        unitPrice: item.unitPrice,
-      })),
-    };
+    try {
+      setSubmitting(true);
+      const payload = {
+        ...values,
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          actualQuantity: item.actualQuantity,
+          unitPrice: item.unitPrice,
+        })),
+      };
 
-    await createReceipt(payload);
-
-    alert('Create receipt successfully');
-
-    reset();
-
-    setItems([]);
+      await createReceipt(payload);
+      message.success('Create receipt successfully');
+      form.resetFields();
+      setItems([]);
+      navigate('/');
+    } catch (error) {
+      message.error('Failed to create receipt');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className='mx-auto max-w-7xl p-6'>
-      <h1 className='mb-6 text-3xl font-bold'>
-        Create Warehouse Receipt
-      </h1>
-
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className='grid grid-cols-3 gap-4 rounded-xl bg-white p-6 shadow-sm'>
-          <input
-            placeholder='Receipt No'
-            {...register('receiptNo')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            placeholder='Department'
-            {...register('department')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            placeholder='Unit Name'
-            {...register('unitName')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            placeholder='Delivery Person'
-            {...register('deliveryPerson')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            placeholder='Warehouse Name'
-            {...register('warehouseName')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            placeholder='Location'
-            {...register('location')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            placeholder='Import Reason'
-            {...register('importReason')}
-            className='rounded-lg border px-3 py-2'
-          />
-
-          <input
-            type='number'
-            placeholder='Document Count'
-            {...register('documentCount', {
-              valueAsNumber: true,
-            })}
-            className='rounded-lg border px-3 py-2'
-          />
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      {/* Page Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} />
+        <div>
+          <Title level={3} style={{ margin: 0 }}>Tạo đơn nhập kho</Title>
+          <Text type="secondary">Điền thông tin để nhập sản phẩm vào kho</Text>
         </div>
+      </div>
 
-        <div className='mt-8 rounded-xl bg-white p-6 shadow-sm'>
-          <div className='mb-5'>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onSubmit}
+      >
+        <Card title="Thông tin phiếu" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.02)', borderRadius: '8px', marginBottom: 24 }}>
+          <Row gutter={[16, 0]}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item name="receiptNo" label="Mã phiếu" rules={[{ required: true, message: 'Please input receipt number!' }]}>
+                <Input placeholder="PNK-2026-001" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item name="department" label="Bộ phận">
+                <Input placeholder="" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item name="unitName" label="Đơn vị">
+                <Input placeholder="" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item name="deliveryPerson" label="Người giao hàng">
+                <Input placeholder="Họ và tên người giao hàng" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item name="warehouseName" label="Tên kho" rules={[{ required: true, message: 'Please input warehouse name!' }]}>
+                <Input placeholder="Kho A" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item name="location" label="Địa điểm kho">
+                <Input placeholder="" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Form.Item name="attachedDocument" label="Số chứng từ gốc kèm theo">
+                <Input placeholder="" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
+
+        <Card title="Thông tin sản phẩm" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.02)', borderRadius: '8px' }}>
+          <div style={{ marginBottom: 20 }}>
             <ProductSearch
               products={products}
               onSelect={handleSelectProduct}
-              onCreateNew={() =>
-                setOpenModal(true)
-              }
+              onCreateNew={() => setOpenModal(true)}
             />
           </div>
 
           <ReceiptItemsTable
             items={items}
             onChange={handleChangeItem}
-            onRemove={(index) => {
-              setItems((prev) =>
-                prev.filter((_, i) => i !== index),
-              );
+            onRemove={(index: any) => {
+              setItems((prev) => prev.filter((_, i) => i !== index));
             }}
           />
 
-          <div className='mt-6 flex justify-end'>
-            <div className='rounded-xl bg-slate-100 px-5 py-4'>
-              <span className='text-lg font-semibold'>
-                Total:
-              </span>
-
-              <span className='ml-3 text-2xl font-bold text-blue-600'>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
+            <div style={{ background: '#f5f5f5', padding: '12px 24px', borderRadius: '8px', textAlign: 'right' }}>
+              <Text style={{ fontSize: '16px', marginRight: 12 }}>Tổng tiền:</Text>
+              <Text style={{ fontSize: '22px', fontWeight: 'bold', color: '#1677ff' }}>
                 {formatCurrency(grandTotal)}
-              </span>
+              </Text>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className='mt-6 flex justify-end'>
-          <button
-            type='submit'
-            className='rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700'
-          >
-            Create Receipt
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, gap: 12 }}>
+          <Button size="large" onClick={() => navigate('/')}>Hủy bỏ</Button>
+          <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="large" loading={submitting} >
+            Tạo phiếu nhập kho
+          </Button>
         </div>
-      </form>
+      </Form>
 
       <AddProductModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSubmit={handleCreateProduct}
       />
-    </div>
+    </Space>
   );
 };
 

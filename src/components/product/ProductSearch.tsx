@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react';
+import { Select, Button, Divider, Typography } from 'antd';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { type Product } from '../../types/product';
+
+const { Text } = Typography;
 
 interface Props {
   products: Product[];
@@ -7,69 +10,60 @@ interface Props {
   onCreateNew: () => void;
 }
 
-const ProductSearch = ({
-  products,
-  onSelect,
-  onCreateNew,
-}: Props) => {
-  const [keyword, setKeyword] = useState('');
-  const [open, setOpen] = useState(false);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter(
-      (product) =>
-        product.name
-          .toLowerCase()
-          .includes(keyword.toLowerCase()) ||
-        product.code
-          .toLowerCase()
-          .includes(keyword.toLowerCase()),
-    );
-  }, [keyword, products]);
-
+const ProductSearch = ({ products, onSelect, onCreateNew }: Props) => {
   return (
-    <div className='relative'>
-      <input
-        value={keyword}
-        onFocus={() => setOpen(true)}
-        onChange={(e) => setKeyword(e.target.value)}
-        placeholder='Search product...'
-        className='w-full rounded-lg border px-3 py-2'
-      />
-
-      {open && (
-        <div className='absolute z-50 mt-2 max-h-80 w-full overflow-auto rounded-lg border bg-white shadow-lg'>
-          <button
-            type='button'
-            onClick={onCreateNew}
-            className='w-full border-b px-4 py-3 text-left font-semibold text-blue-600 hover:bg-slate-50'
-          >
-            + Add New Product
-          </button>
-
-          {filteredProducts.map((product) => (
-            <button
-              key={product.id}
-              type='button'
-              onClick={() => {
-                onSelect(product);
-                setKeyword('');
-                setOpen(false);
-              }}
-              className='flex w-full flex-col px-4 py-3 text-left hover:bg-slate-100'
-            >
-              <span className='font-medium'>
-                {product.name}
-              </span>
-
-              <span className='text-sm text-slate-500'>
-                {product.code}
-              </span>
-            </button>
-          ))}
-        </div>
+    <Select
+      showSearch
+      style={{ width: '100%', maxWidth: 500 }}
+      placeholder={
+        <span style={{ color: '#bfbfbf' }}>
+          <SearchOutlined style={{ marginRight: 8 }} />
+          Tìm kiếm sản phẩm theo tên, mã...
+        </span>
+      }
+      size="large"
+      value={null}
+      optionFilterProp="children"
+      filterOption={(input, option) => {
+        const product = option?.data;
+        if (!product) return false;
+        const searchKey = input.toLowerCase();
+        return (
+          product.name.toLowerCase().includes(searchKey) ||
+          product.code.toLowerCase().includes(searchKey)
+        );
+      }}
+      onChange={(value) => {
+        const found = products.find((p) => p.id === value);
+        if (found) onSelect(found);
+      }}
+      dropdownRender={(menu) => (
+        <>
+          <div style={{ padding: '4px 4px 0px 4px' }}>
+            <Button
+              type="primary"
+              ghost
+              icon={<PlusOutlined />}
+              onClick={onCreateNew}
+              style={{ width: '100%', textAlign: 'left', borderRadius: '4px' }}
+            > 
+              Thêm sản phẩm mới
+            </Button>
+          </div>
+          <Divider style={{ margin: '4px 0' }} />
+          {menu}
+        </>
       )}
-    </div>
+    >
+      {products.map((product) => (
+        <Select.Option key={product.id} value={product.id} data={product}>
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 0' }}>
+            <span style={{ fontWeight: 500, color: '#262626', fontSize: '14px' }}>{product.name}</span>
+            <Text type="secondary" style={{ fontSize: '12px' }}>{product.code}</Text>
+          </div>
+        </Select.Option>
+      ))}
+    </Select>
   );
 };
 

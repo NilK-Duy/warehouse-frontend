@@ -1,20 +1,17 @@
-import { useEffect, useState } from 'react';
-
-import { useParams } from 'react-router-dom';
-
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, Table, Button, Descriptions, Typography, Space, Spin, message } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { getReceiptDetail } from '../../api/receipt.api';
-
-import Loading from '../../components/common/Loading';
-import PageHeader from '../../components/common/PageHeader';
-
 import { formatCurrency } from '../../utils/currency';
 
-const ReceiptDetailPage = () => {
+const { Title, Text } = Typography;
+
+const ReceiptDetailPage: React.FC = () => {
   const { id } = useParams();
-
+  const navigate = useNavigate();
   const [receipt, setReceipt] = useState<any>(null);
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (id) {
@@ -25,130 +22,112 @@ const ReceiptDetailPage = () => {
   const fetchReceipt = async () => {
     try {
       setLoading(true);
-
-      const response =
-        await getReceiptDetail(id!);
-
+      const response = await getReceiptDetail(id!);
       setReceipt(response);
     } catch (error) {
-      console.error(error);
+      message.error('Không thể kết nối lấy dữ liệu chi tiết');
     } finally {
       setLoading(false);
     }
   };
 
+  const columns = [
+    {
+      title: 'Mã hàng hóa',
+      dataIndex: ['product', 'code'],
+      key: 'productCode',
+      width: 150,
+    },
+    {
+      title: 'Tên sản phẩm / Vật tư',
+      dataIndex: ['product', 'name'],
+      key: 'productName',
+    },
+    {
+      title: 'Đơn vị',
+      dataIndex: ['product', 'unit'],
+      key: 'productUnit',
+      width: 100,
+    },
+    {
+      title: 'SL Yêu cầu',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 120,
+    },
+    {
+      title: 'SL Thực nhập',
+      dataIndex: 'actualQuantity',
+      key: 'actualQuantity',
+      width: 120,
+    },
+    {
+      title: 'Đơn giá',
+      dataIndex: 'unitPrice',
+      key: 'unitPrice',
+      width: 160,
+      render: (price: string) => <span>{formatCurrency(Number(price))}</span>,
+    },
+    {
+      title: 'Thành tiền',
+      dataIndex: 'amount',
+      key: 'amount',
+      width: 180,
+      render: (amount: string) => (
+        <span style={{ fontWeight: 'bold', color: '#1677ff' }}>
+          {formatCurrency(Number(amount))}
+        </span>
+      ),
+    },
+  ];
+
   if (loading || !receipt) {
-    return <Loading />;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+        <Spin size="large" tip="Đang tải dữ liệu chi tiết phiếu nhập..." />
+      </div>
+    );
   }
 
   return (
-    <div>
-      <PageHeader
-        title={`Receipt ${receipt.receiptNo}`}
-        description='Warehouse receipt detail'
-      />
-
-      <div className='rounded-xl bg-white p-6 shadow-sm'>
-        <div className='grid grid-cols-2 gap-4'>
-          <div>
-            <p className='text-sm text-slate-500'>
-              Department
-            </p>
-
-            <p className='font-semibold'>
-              {receipt.department}
-            </p>
-          </div>
-
-          <div>
-            <p className='text-sm text-slate-500'>
-              Warehouse
-            </p>
-
-            <p className='font-semibold'>
-              {receipt.warehouseName}
-            </p>
-          </div>
-
-          <div>
-            <p className='text-sm text-slate-500'>
-              Delivery Person
-            </p>
-
-            <p className='font-semibold'>
-              {receipt.deliveryPerson}
-            </p>
-          </div>
-
-          <div>
-            <p className='text-sm text-slate-500'>
-              Total Amount
-            </p>
-
-            <p className='font-semibold text-blue-600'>
-              {formatCurrency(
-                Number(receipt.totalAmount),
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className='mt-8 overflow-hidden rounded-xl border'>
-          <table className='w-full'>
-            <thead className='bg-slate-100'>
-              <tr>
-                <th className='px-4 py-3 text-left'>
-                  Product
-                </th>
-
-                <th className='px-4 py-3 text-left'>
-                  Quantity
-                </th>
-
-                <th className='px-4 py-3 text-left'>
-                  Unit Price
-                </th>
-
-                <th className='px-4 py-3 text-left'>
-                  Amount
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {receipt.items.map(
-                (item: any) => (
-                  <tr
-                    key={item.id}
-                    className='border-t'
-                  >
-                    <td className='px-4 py-3'>
-                      {item.product.name}
-                    </td>
-
-                    <td className='px-4 py-3'>
-                      {item.quantity}
-                    </td>
-
-                    <td className='px-4 py-3'>
-                      {formatCurrency(
-                        Number(item.unitPrice),
-                      )}
-                    </td>
-
-                    <td className='px-4 py-3 font-semibold'>
-                      {formatCurrency(
-                        Number(item.amount),
-                      )}
-                    </td>
-                  </tr>
-                ),
-              )}
-            </tbody>
-          </table>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} />
+        <div>
+          <Title level={3} style={{ margin: 0 }}>Receipt: {receipt.receiptNo}</Title>
+          <Text type="secondary">Thông tin chi tiết về biên nhận kho hàng</Text>
         </div>
       </div>
-    </div>
+
+      <Card title="Thông tin phiếu nhập kho" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.02)', borderRadius: '8px' }}>
+        <Descriptions bordered column={{ xs: 1, sm: 2, md: 2 }} size="middle">
+          <Descriptions.Item label="Mã số phiếu"><strong>{receipt.receiptNo}</strong></Descriptions.Item>
+          <Descriptions.Item label="Bộ phận áp dụng">{receipt.department}</Descriptions.Item>
+          <Descriptions.Item label="Tên đơn vị / Chi nhánh">{receipt.unitName}</Descriptions.Item>
+          <Descriptions.Item label="Người giao nhận">{receipt.deliveryPerson}</Descriptions.Item>
+          <Descriptions.Item label="Tên kho chứa hàng">{receipt.warehouseName}</Descriptions.Item>
+          <Descriptions.Item label="Vị trí sắp xếp kho">{receipt.location || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Chứng từ kèm theo">{receipt.attachedDocument || 'Không có'}</Descriptions.Item>
+          <Descriptions.Item label="Ngày lập phiếu">{new Date(receipt.createdAt).toLocaleString('vi-VN')}</Descriptions.Item>
+          <Descriptions.Item label="Tổng giá trị thành tiền" span={2}>
+            <span style={{ color: '#52c41a', fontWeight: 'bold', fontSize: '18px' }}>
+              {formatCurrency(Number(receipt.totalAmount))}
+            </span>
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      <Card title="Danh sách hàng hóa / Vật tư chi tiết" style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.02)', borderRadius: '8px' }}>
+        <Table
+          dataSource={receipt.items}
+          columns={columns}
+          rowKey="id"
+          pagination={false}
+          bordered
+        />
+      </Card>
+    </Space>
   );
 };
 

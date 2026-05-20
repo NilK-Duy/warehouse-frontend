@@ -7,8 +7,8 @@ import {
 import MainLayout from '../layouts/MainLayout';
 
 import CreateReceiptPage from '../pages/receipts/CreateReceiptPage';
-import ReceiptDetailPage from '../pages/receipts/ReceiptDetailPage';
 import ReceiptListPage from '../pages/receipts/ReceiptListPage';
+// import ReceiptDetailPage from '../pages/receipts/ReceiptDetailPage';
 
 const AppRoutes = () => {
   return (
@@ -21,14 +21,14 @@ const AppRoutes = () => {
           />
 
           <Route
-            path='/create'
+            path='/create-receipt'
             element={<CreateReceiptPage />}
           />
 
-          <Route
+          {/* <Route
             path='/receipts/:id'
             element={<ReceiptDetailPage />}
-          />
+          /> */}
         </Route>
       </Routes>
     </BrowserRouter>
