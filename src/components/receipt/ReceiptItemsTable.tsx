@@ -1,184 +1,99 @@
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-
+import React from 'react';
+import { Table, InputNumber, Button, Popconfirm } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import { type ReceiptItemForm } from '../../types/receipt';
 import { formatCurrency } from '../../utils/currency';
 
-interface Props {
+interface ReceiptItemsTableProps {
   items: ReceiptItemForm[];
-  onChange: (
-    index: number,
-    field: keyof ReceiptItemForm,
-    value: number,
-  ) => void;
+  onChange: (index: number, field: keyof ReceiptItemForm, value: number) => void;
   onRemove: (index: number) => void;
 }
 
-const ReceiptItemsTable = ({
-  items,
-  onChange,
-  onRemove,
-}: Props) => {
-  const columns: ColumnDef<ReceiptItemForm>[] = [
+const ReceiptItemsTable: React.FC<ReceiptItemsTableProps> = ({ items, onChange, onRemove }) => {
+  const columns = [
     {
-      header: 'Product',
-      accessorFn: (row) => row.product.name,
+      title: 'Tên sản phẩm',
+      dataIndex: ['product', 'name'],
+      key: 'name',
     },
-
     {
-      header: 'Code',
-      accessorFn: (row) => row.product.code,
-    },
-
-    {
-      header: 'Unit',
-      accessorFn: (row) => row.product.unit,
-    },
-
-    {
-      header: 'Quantity',
-      cell: ({ row }) => (
-        <input
-          type='number'
+      title: 'Số lượng',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 130,
+      render: (value: number, _: any, index: number) => (
+        <InputNumber
           min={1}
-          value={row.original.quantity}
-          onChange={(e) =>
-            onChange(
-              row.index,
-              'quantity',
-              Number(e.target.value),
-            )
-          }
-          className='w-24 rounded-lg border px-3 py-2'
+          value={value}
+          onChange={(val) => onChange(index, 'quantity', val || 0)}
+          style={{ width: '100%' }}
         />
       ),
     },
-
     {
-      header: 'Actual Quantity',
-      cell: ({ row }) => (
-        <input
-          type='number'
-          min={1}
-          value={row.original.actualQuantity}
-          onChange={(e) =>
-            onChange(
-              row.index,
-              'actualQuantity',
-              Number(e.target.value),
-            )
-          }
-          className='w-24 rounded-lg border px-3 py-2'
-        />
-      ),
-    },
-
-    {
-      header: 'Unit Price',
-      cell: ({ row }) => (
-        <input
-          type='number'
+      title: 'Số lượng thực nhập',
+      dataIndex: 'actualQuantity',
+      key: 'actualQuantity',
+      width: 130,
+      render: (value: number, _: any, index: number) => (
+        <InputNumber
           min={0}
-          value={row.original.unitPrice}
-          onChange={(e) =>
-            onChange(
-              row.index,
-              'unitPrice',
-              Number(e.target.value),
-            )
-          }
-          className='w-40 rounded-lg border px-3 py-2'
+          value={value}
+          onChange={(val) => onChange(index, 'actualQuantity', val || 0)}
+          style={{ width: '100%' }}
         />
       ),
     },
-
     {
-      header: 'Amount',
-      cell: ({ row }) => (
-        <span className='font-semibold text-blue-600'>
-          {formatCurrency(row.original.amount)}
-        </span>
+      title: 'Đơn giá',
+      dataIndex: 'unitPrice',
+      key: 'unitPrice',
+      width: 160,
+      render: (value: number, _: any, index: number) => (
+        <InputNumber
+          min={0}
+          formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+          value={value}
+          onChange={(val) => onChange(index, 'unitPrice', val || 0)}
+          style={{ width: '100%' }}
+        />
       ),
     },
-
     {
-      header: 'Action',
-      cell: ({ row }) => (
-        <button
-          type='button'
-          onClick={() => onRemove(row.index)}
-          className='rounded-lg bg-red-500 px-3 py-2 text-white hover:bg-red-600'
+      title: 'Thành tiền',
+      dataIndex: 'amount',
+      key: 'amount',
+      width: 150,
+      render: (amount: number) => (
+        <span style={{ fontWeight: 'bold' }}>{formatCurrency(amount)}</span>
+      ),
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: 80,
+      render: (_: any, __: any, index: number) => (
+        <Popconfirm
+          title="Loại bỏ sản phẩm này?"
+          onConfirm={() => onRemove(index)}
+          okText="Yes"
+          cancelText="No"
         >
-          Delete
-        </button>
+          <Button type="primary" danger ghost icon={<DeleteOutlined />} size="small" />
+        </Popconfirm>
       ),
     },
   ];
 
-  const table = useReactTable({
-    data: items,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   return (
-    <div className='overflow-hidden rounded-xl border'>
-      <table className='w-full'>
-        <thead className='bg-slate-100'>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className='px-4 py-3 text-left'
-                >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className='border-t'
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className='px-4 py-4'
-                >
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext(),
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-
-          {items.length === 0 && (
-            <tr>
-              <td
-                colSpan={8}
-                className='py-10 text-center text-slate-500'
-              >
-                No products selected
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Table
+      dataSource={items}
+      columns={columns}
+      rowKey={(record) => record.productId}
+      pagination={false}
+      locale={{ emptyText: 'Đơn của bạn chưa có sản phẩm nào' }}
+    />
   );
 };
 

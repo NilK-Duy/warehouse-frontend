@@ -14,10 +14,9 @@ export interface CreateReceiptPayload {
   department: string;
   unitName: string;
   deliveryPerson: string;
-  importReason: string;
   warehouseName: string;
   location: string;
-  documentCount: number;
+  attachedDocument: string;
   items: {
     productId: string;
     quantity: number;
